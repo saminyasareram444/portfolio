@@ -523,6 +523,7 @@ h1 span {
 }
 .tv-rec i { width: 7px; height: 7px; border-radius: 50%; background: #ff4d5e; animation: ledBlink 1.4s ease-in-out infinite; }
 .teaching-video.is-playing .tv-rec { opacity: 0; }
+.tv-frame video::cue { background: rgba(17, 17, 22, .78); color: #fff; font-family: var(--font-sans); font-size: 1.05em; line-height: 1.35; }
 .tv-note { margin: 12px 4px 0; color: var(--muted); font: 500 .7rem/1.5 var(--font-mono); letter-spacing: .06em; }
 .tv-note a { color: var(--crimson); }
 .tv-info h4 { margin-bottom: 12px; font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.15; letter-spacing: -.03em; }

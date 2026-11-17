@@ -23,7 +23,7 @@ A responsive static teaching portfolio focused on Computer Science, autonomous U
 
 ## Evidence of teaching practice
 The Evidence section has four parts:
-- **Teaching in action**: a 12-minute recorded session, "Supporting community: building a sense of belonging in college classrooms" (`assets/teaching-demo.mp4`, with a poster frame), with clickable chapter markers for each slide.
+- **Teaching in action**: a 12-minute recorded session, "Supporting community: building a sense of belonging in college classrooms" (`assets/teaching-demo.mp4`, with a poster frame), with clickable chapter markers for each slide. The video was brightened, its audio denoised (RNNoise) and normalized, and it carries animated overlays: a title card, a name caption, chapter labels, a progress bar, and an end card. English captions (`assets/teaching-demo.en.vtt`) are on by default, and a plain-text transcript (`assets/teaching-demo-transcript.txt`) is linked below the player.
 - **Signature practices**: Predict → Test → Explain, process plus product, multiple ways in, and failure as evidence.
 - **Teaching dossier** (tabbed): a proposed 14-week course design, a sample 75-minute lesson plan with an alignment table, a sample project with an analytic rubric, and a formative feedback loop with an exit ticket.
 - **50-minute class plan**: "Teaching a drone to land: MDPs and reward design". It uses a bookend–overlay–interleave structure: Update Your Classmate (5 min), guided notes over lecturette 1 (15 min), think-pair-share (5 min), guided notes over lecturette 2 (15 min), lecture wrapper (5 min), and 5 minutes of flex time. A clickable timeline links each block to its segment details, with guided-notes excerpts and the evidence of learning for each segment.
