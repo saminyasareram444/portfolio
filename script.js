@@ -222,6 +222,34 @@ function relayout() {
 window.addEventListener('resize', relayout);
 document.fonts?.ready.then(relayout);
 
+/* ---------- Teaching video chapters ---------- */
+const teachingVideo = document.getElementById('teachingVideo');
+const chapterButtons = [...document.querySelectorAll('.tv-chapters button')];
+
+function markChapter() {
+  const time = teachingVideo.currentTime;
+  const current = chapterButtons.filter((button) => Number(button.dataset.time) <= time + 0.5).pop();
+  chapterButtons.forEach((button) => {
+    button.classList.toggle('is-current', button === current);
+    if (button === current) button.setAttribute('aria-current', 'true');
+    else button.removeAttribute('aria-current');
+  });
+}
+
+if (teachingVideo) {
+  chapterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      teachingVideo.currentTime = Number(button.dataset.time);
+      teachingVideo.play().catch(() => { /* playback needs a user gesture in some browsers */ });
+      markChapter();
+    });
+  });
+  teachingVideo.addEventListener('timeupdate', markChapter);
+  teachingVideo.addEventListener('play', () => teachingVideo.closest('.teaching-video').classList.add('is-playing'));
+  teachingVideo.addEventListener('pause', () => teachingVideo.closest('.teaching-video').classList.remove('is-playing'));
+  markChapter();
+}
+
 /* ---------- Card tilt + magnetic buttons ---------- */
 if (finePointer) {
   document.querySelectorAll('[data-tilt]').forEach((card) => {
