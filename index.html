@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Teaching portfolio of Samin Yasar, PhD student in Computer Science researching autonomous UAVs and VTOL systems, reinforcement learning, explainable AI, adversarial machine learning, and computer vision." />
+  <meta name="theme-color" content="#9e1b32" />
+  <title>Samin Yasar | Teaching Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%239e1b32'/%3E%3Cpath d='M20 20 44 44M44 20 20 44' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cg fill='none' stroke='white' stroke-width='3'%3E%3Ccircle cx='18' cy='18' r='8'/%3E%3Ccircle cx='46' cy='18' r='8'/%3E%3Ccircle cx='18' cy='46' r='8'/%3E%3Ccircle cx='46' cy='46' r='8'/%3E%3C/g%3E%3Crect x='26' y='26' width='12' height='12' rx='3' fill='white'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" />
+  <script>
+    // Runs before first paint: apply the saved theme and motion preference, and decide whether to show the pre-flight intro.
+    (function () {
+      var root = document.documentElement;
+      var osDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var osMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'off' : 'on';
+      root.classList.add('js');
+      root.dataset.theme = osDark ? 'dark' : 'light';
+      root.dataset.motion = osMotion;
+      try {
+        var theme = localStorage.getItem('portfolio-theme');
+        var motion = localStorage.getItem('portfolio-motion');
+        if (theme === 'dark' || theme === 'light') root.dataset.theme = theme;
+        if (motion === 'on' || motion === 'off') root.dataset.motion = motion;
+        if (root.dataset.motion === 'on' && !sessionStorage.getItem('preflight-done')) root.classList.add('preflight-on');
+      } catch (error) { /* storage unavailable: keep OS preferences */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <div class="preflight" id="preflight" aria-hidden="true">
+    <div class="preflight-card">
+      <div class="preflight-head"><span>SY-01</span><span>Pre-flight check</span></div>
+      <ol class="preflight-steps">
+        <li style="--i: 0"><span>IMU calibration</span><i></i><b>OK</b></li>
+        <li style="--i: 1"><span>GPS lock · 33.2140° N</span><i></i><b>OK</b></li>
+        <li style="--i: 2"><span>Perception stack</span><i></i><b>OK</b></li>
+        <li style="--i: 3"><span>Lesson plans loaded</span><i></i><b>OK</b></li>
+      </ol>
+      <div class="preflight-bar"><span></span></div>
+      <p class="preflight-status">Cleared for takeoff</p>
+    </div>
+  </div>
+
+  <canvas class="uav-background" id="uavBackground" aria-hidden="true"></canvas>
+
+  <div class="cursor-layer" id="cursorLayer" aria-hidden="true">
+    <canvas class="cursor-trail" id="cursorTrail"></canvas>
+    <div class="cursor-lock" id="cursorLock"><i></i><i></i><i></i><i></i><span class="cursor-lock-label" id="cursorLockLabel"></span></div>
+    <div class="cursor-reticle" id="cursorReticle"><span></span></div>
+    <div class="cursor-readout" id="cursorReadout"></div>
+    <div class="cursor-drone" id="cursorDrone">
+      <svg viewBox="-30 -30 60 60">
+        <path class="cd-arm" d="M-15 -15 15 15M15 -15-15 15" />
+        <g transform="translate(-15 -15)"><circle class="cd-disc" r="9" /><circle class="cd-hub cd-port" r="2.4" /><g class="cd-blade"><path d="M-8 0H8" /></g></g>
+        <g transform="translate(15 -15)"><circle class="cd-disc" r="9" /><circle class="cd-hub cd-starboard" r="2.4" /><g class="cd-blade"><path d="M-8 0H8" /></g></g>
+        <g transform="translate(15 15)"><circle class="cd-disc" r="9" /><circle class="cd-hub" r="2.4" /><g class="cd-blade"><path d="M-8 0H8" /></g></g>
+        <g transform="translate(-15 15)"><circle class="cd-disc" r="9" /><circle class="cd-hub" r="2.4" /><g class="cd-blade"><path d="M-8 0H8" /></g></g>
+        <rect class="cd-body" x="-6" y="-8" width="12" height="16" rx="4" />
+        <path class="cd-nose" d="M-3.2 -9.5 0 -13.5 3.2 -9.5Z" />
+      </svg>
+    </div>
+  </div>
+
+  <aside class="altimeter" aria-hidden="true">
+    <span>ALT</span>
+    <div class="altimeter-scale">
+      <span class="altimeter-marker" id="altMarker"><b id="altValue">400</b></span>
+    </div>
+    <span>LZ</span>
+  </aside>
+
+  <header class="site-header" id="top">
+    <a class="brand" href="#home" aria-label="Samin Yasar home">
+      <span class="brand-mark">SY</span>
+      <span class="brand-text">Samin Yasar</span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="siteNav">Menu</button>
+    <nav class="site-nav" id="siteNav" aria-label="Primary navigation">
+      <a href="#about">About</a>
+      <a href="#teaching">Teaching</a>
+      <a href="#philosophy">Philosophy</a>
+      <a href="#research">Research</a>
+      <a href="#portfolio">Evidence</a>
+      <a href="#contact">Contact</a>
+      <span class="nav-indicator" id="navIndicator" aria-hidden="true"></span>
+    </nav>
+    <button class="motion-toggle" id="motionToggle" type="button" aria-label="Animations" aria-pressed="true" title="Pause animations" data-magnetic>
+      <svg viewBox="-12 -12 24 24" aria-hidden="true">
+        <path class="mt-arm" d="M-6-6 6 6M6-6-6 6" />
+        <g transform="translate(-6 -6)"><circle r="4" /><path class="mt-blade" d="M-3.2 0H3.2" /></g>
+        <g transform="translate(6 -6)"><circle r="4" /><path class="mt-blade ccw" d="M-3.2 0H3.2" /></g>
+        <g transform="translate(6 6)"><circle r="4" /><path class="mt-blade" d="M-3.2 0H3.2" /></g>
+        <g transform="translate(-6 6)"><circle r="4" /><path class="mt-blade ccw" d="M-3.2 0H3.2" /></g>
+        <rect x="-2.2" y="-2.2" width="4.4" height="4.4" rx="1.2" />
+      </svg>
+    </button>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch theme" data-magnetic>
+      <span class="theme-icon theme-sun" aria-hidden="true">☀</span>
+      <span class="theme-icon theme-moon" aria-hidden="true">☾</span>
+    </button>
+  </header>
+
+  <main id="main">
+    <section class="hero section" id="home">
+      <div class="flight-scene" aria-hidden="true">
+        <svg class="flight-map" viewBox="0 0 1180 720" role="presentation">
+          <path class="flight-route" id="heroFlightRoute" d="M35,550 C165,420 275,520 390,390 S610,190 760,290 S980,460 1140,185" />
+          <circle class="waypoint waypoint-a" cx="390" cy="390" r="5" />
+          <circle class="waypoint waypoint-b" cx="760" cy="290" r="5" />
+          <circle class="waypoint waypoint-c" cx="1140" cy="185" r="5" />
+          <g class="flying-vtol">
+            <g class="vtol-body">
+              <path d="M-17 0 L-6 -4 L4 -20 L10 -20 L7 -5 L25 -1 L27 2 L7 5 L10 20 L4 20 L-6 4 L-17 0Z" />
+              <rect x="-8" y="-13" width="3" height="26" rx="1.5" />
+              <ellipse class="rotor" cx="-8" cy="-15" rx="9" ry="2.2" />
+              <ellipse class="rotor rotor-2" cx="-8" cy="15" rx="9" ry="2.2" />
+            </g>
+            <animateMotion dur="13s" repeatCount="indefinite" rotate="auto">
+              <mpath href="#heroFlightRoute" />
+            </animateMotion>
+          </g>
+        </svg>
+        <span class="flight-label label-a">PERCEPTION</span>
+        <span class="flight-label label-b">DECISION</span>
+        <span class="flight-label label-c">CONTROL</span>
+      </div>
+
+      <div class="hero-copy reveal">
+        <p class="eyebrow">Teaching Portfolio • Computer Science</p>
+        <h1>I teach computing as a way to <span>reason, build, and question.</span></h1>
+        <p class="hero-lead">
+          I am <strong>Samin Yasar</strong>, a PhD student in Computer Science whose work spans
+          autonomous UAVs and VTOL systems, reinforcement learning, explainable AI, adversarial machine learning,
+          and computer vision.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#teaching" data-magnetic>Explore my teaching</a>
+          <a class="button ghost" href="mailto:syasar@crimson.ua.edu" data-magnetic>Email me</a>
+        </div>
+        <div class="hero-meta" aria-label="Profile summary">
+          <div><span class="meta-number">5</span><span class="meta-label">Research areas</span></div>
+          <div><span class="meta-number">PhD</span><span class="meta-label">Computer Science</span></div>
+          <div><span class="meta-number">UA</span><span class="meta-label">Crimson community</span></div>
+        </div>
+      </div>
+
+      <div class="portrait-wrap reveal">
+        <div class="portrait-frame">
+          <img src="assets/samin-yasar.webp" alt="Portrait of Samin Yasar" />
+          <span class="portrait-scan" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-note">
+          <span class="dot"></span>
+          Teaching • UAV Research • Responsible AI
+        </div>
+        <div class="uav-telemetry" aria-hidden="true">
+          <span class="telemetry-pulse"></span>
+          <div><strong>UAV / VTOL</strong><small>AUTONOMY ONLINE</small></div>
+        </div>
+      </div>
+
+      <div class="hud-strip reveal" aria-hidden="true">
+        <span>LAT <b>33.2140° N</b></span>
+        <span>LON <b>87.5391° W</b></span>
+        <span>HDG <b id="hudHeading">042°</b></span>
+        <span>ALT <b id="hudAlt">400 FT</b></span>
+        <span>CT <b id="hudClock">--:--:--</b></span>
+        <span class="hud-link"><i></i>LINK STABLE</span>
+      </div>
+    </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>Perception</span><span>Planning</span><span>Control</span><span>Reinforcement learning</span><span>Explainable AI</span><span>Adversarial ML</span><span>Computer vision</span><span>VTOL transition</span><span>Responsible autonomy</span>
+        <span>Perception</span><span>Planning</span><span>Control</span><span>Reinforcement learning</span><span>Explainable AI</span><span>Adversarial ML</span><span>Computer vision</span><span>VTOL transition</span><span>Responsible autonomy</span>
+      </div>
+    </div>
+
+    <section class="section about" id="about">
+      <div class="section-heading reveal">
+        <p class="eyebrow">01 / About</p>
+        <h2>Learning complex ideas should feel rigorous, not inaccessible.</h2>
+      </div>
+      <div class="about-grid reveal">
+        <p class="large-copy">
+          My academic work sits at the intersection of intelligent systems and autonomous aerial systems, especially UAVs and VTOL platforms.
+          I am especially interested in how students move from mathematical and algorithmic ideas to
+          systems they can implement, test, explain, and evaluate critically.
+        </p>
+        <div class="about-card">
+          <h3>What shapes my classroom</h3>
+          <ul class="check-list">
+            <li>Connect theory to authentic engineering problems.</li>
+            <li>Make reasoning visible through discussion and explanation.</li>
+            <li>Use iterative experimentation instead of one-shot answers.</li>
+            <li>Emphasize responsible, interpretable, and robust AI systems.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section teaching" id="teaching">
+      <div class="section-heading reveal">
+        <p class="eyebrow">02 / Teaching</p>
+        <h2>Teaching interests</h2>
+        <p>I am building a teaching practice around the areas where algorithms meet intelligent physical systems.</p>
+      </div>
+
+      <div class="card-grid">
+        <article class="topic-card reveal" data-tilt>
+          <span class="card-index">01</span>
+          <h3>Artificial Intelligence & Machine Learning</h3>
+          <p>Foundations of learning systems, model evaluation, generalization, and responsible use of AI.</p>
+        </article>
+        <article class="topic-card reveal" data-tilt>
+          <span class="card-index">02</span>
+          <h3>Reinforcement Learning</h3>
+          <p>Sequential decision-making, reward design, exploration, policy learning, and evaluation in simulated or embodied tasks.</p>
+        </article>
+        <article class="topic-card reveal" data-tilt>
+          <span class="card-index">03</span>
+          <h3>Computer Vision</h3>
+          <p>From image representation and perception pipelines to modern learning-based visual systems.</p>
+        </article>
+        <article class="topic-card reveal" data-tilt>
+          <span class="card-index">04</span>
+          <h3>Autonomous UAV Systems</h3>
+          <p>Integrating perception, decision-making, control, and safety for UAV and VTOL platforms operating under uncertainty.</p>
+        </article>
+        <article class="topic-card reveal" data-tilt>
+          <span class="card-index">05</span>
+          <h3>Trustworthy & Explainable AI</h3>
+          <p>Explainability, adversarial robustness, failure analysis, and the limits of model behavior.</p>
+        </article>
+        <article class="topic-card reveal accent-card" data-tilt>
+          <span class="card-index">→</span>
+          <h3>Teaching through projects</h3>
+          <p>I favor assignments that ask students to build, diagnose, compare, and explain rather than only reproduce an expected result.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section philosophy" id="philosophy">
+      <div class="philosophy-panel reveal">
+        <span class="panel-tag" aria-hidden="true">MISSION BRIEF · 03</span>
+        <div>
+          <p class="eyebrow light">03 / Teaching Philosophy</p>
+          <h2>From “What is the answer?” to “How do we know?”</h2>
+        </div>
+        <div class="philosophy-copy">
+          <p>
+            My teaching philosophy is centered on active, evidence-based learning. In computer science,
+            understanding is strongest when students can explain a concept, implement it, test it under
+            imperfect conditions, and defend the choices they made.
+          </p>
+          <p>
+            I want students to leave a course with both technical confidence and intellectual caution:
+            confidence to build intelligent systems, and caution to question assumptions, evaluate failure
+            modes, and recognize when an algorithm should not be trusted.
+          </p>
+        </div>
+      </div>
+
+      <div class="principles-grid">
+        <article class="principle reveal"><span>01</span><h3>Activate prior knowledge</h3><p>Start from what students already understand, then create clear bridges to new abstractions.</p></article>
+        <article class="principle reveal"><span>02</span><h3>Learn by doing</h3><p>Use coding, experiments, simulations, and structured problem solving to turn concepts into experience.</p></article>
+        <article class="principle reveal"><span>03</span><h3>Discuss decisions</h3><p>Ask students to explain tradeoffs, compare alternatives, and listen critically to other approaches.</p></article>
+        <article class="principle reveal"><span>04</span><h3>Reflect on failure</h3><p>Treat unexpected results as evidence to investigate, not simply mistakes to erase.</p></article>
+      </div>
+    </section>
+
+    <section class="section research" id="research">
+      <div class="section-heading reveal">
+        <p class="eyebrow">04 / Research</p>
+        <h2>Research that feeds the classroom</h2>
+        <p>My research interests give me a practical lens for teaching modern AI through autonomous UAV and VTOL systems.</p>
+      </div>
+
+      <div class="research-orbit reveal" aria-label="Research interests">
+        <div class="uav-orbit-track" aria-hidden="true">
+          <div class="uav-orbit-icon">
+            <svg viewBox="0 0 70 34" role="presentation">
+              <path d="M4 17 L20 14 L29 4 L34 4 L32 14 L55 15 L66 10 L68 12 L60 17 L68 22 L66 24 L55 19 L32 20 L34 30 L29 30 L20 20 Z" />
+              <circle cx="18" cy="8" r="4" /><circle cx="18" cy="26" r="4" />
+            </svg>
+          </div>
+        </div>
+        <div class="orbit-center">Autonomous<br/>UAV &amp; VTOL<br/>Systems</div>
+        <div class="orbit-item item-1">UAV / VTOL Autonomy</div>
+        <div class="orbit-item item-2">Reinforcement Learning</div>
+        <div class="orbit-item item-3">Explainable AI</div>
+        <div class="orbit-item item-4">Adversarial ML</div>
+        <div class="orbit-item item-5">Computer Vision</div>
+      </div>
+
+      <p class="research-note reveal">
+        In teaching, these areas naturally support case-based questions such as: What happens when a perception
+        model is wrong? How should an autonomous aircraft behave under uncertainty? How can we explain a learned
+        decision? And how do we evaluate robustness rather than only average performance?
+      </p>
+    </section>
+
+    <section class="section portfolio" id="portfolio">
+      <div class="section-heading reveal">
+        <p class="eyebrow">05 / Evidence</p>
+        <h2>Evidence of teaching practice</h2>
+        <p>Concrete learning activities, course materials, assessment choices, and feedback practices that show how I make computing rigorous and accessible.</p>
+      </div>
+
+      <h3 class="subhead reveal"><span>A</span>Signature practices</h3>
+      <div class="evidence-grid">
+        <article class="evidence-card reveal" data-tilt>
+          <span class="status">Learning design</span>
+          <span class="evidence-number">01</span>
+          <h3>Predict → Test → Explain</h3>
+          <p>Students predict model behavior, run a controlled experiment, and explain the result using evidence from the code and data.</p>
+          <ul><li>Builds conceptual reasoning</li><li>Surfaces misconceptions</li></ul>
+        </article>
+        <article class="evidence-card reveal" data-tilt>
+          <span class="status">Assessment</span>
+          <span class="evidence-number">02</span>
+          <h3>Process plus product</h3>
+          <p>Evaluation considers implementation, experimental design, technical communication, and evidence of iteration—not code output alone.</p>
+          <ul><li>Transparent criteria</li><li>Authentic project work</li></ul>
+        </article>
+        <article class="evidence-card reveal" data-tilt>
+          <span class="status">Inclusive practice</span>
+          <span class="evidence-number">03</span>
+          <h3>Multiple ways in</h3>
+          <p>Lectures connect diagrams, pseudocode, live demonstrations, and implementation so learners can approach new abstractions through several entry points.</p>
+          <ul><li>Low-floor starters</li><li>Scaffolded extension tasks</li></ul>
+        </article>
+        <article class="evidence-card reveal" data-tilt>
+          <span class="status">Reflection loop</span>
+          <span class="evidence-number">04</span>
+          <h3>Failure becomes evidence</h3>
+          <p>Debugging reflections ask students to identify assumptions, revise hypotheses, and document what changed after an unexpected result.</p>
+          <ul><li>Metacognitive reflection</li><li>Continuous improvement</li></ul>
+        </article>
+      </div>
+
+      <h3 class="subhead reveal"><span>B</span>Teaching artifacts</h3>
+      <div class="dossier reveal">
+        <div class="dossier-bar" aria-hidden="true">
+          <span><i></i>TEACHING_DOSSIER</span>
+          <span>4 FILES · COURSE MATERIALS</span>
+        </div>
+        <div class="dossier-tabs" role="tablist" aria-label="Teaching artifacts">
+          <button class="dossier-tab" type="button" role="tab" id="tab-course" aria-controls="panel-course" aria-selected="true"><span>01</span> Course design</button>
+          <button class="dossier-tab" type="button" role="tab" id="tab-lesson" aria-controls="panel-lesson" aria-selected="false" tabindex="-1"><span>02</span> Lesson plan</button>
+          <button class="dossier-tab" type="button" role="tab" id="tab-rubric" aria-controls="panel-rubric" aria-selected="false" tabindex="-1"><span>03</span> Assignment &amp; rubric</button>
+          <button class="dossier-tab" type="button" role="tab" id="tab-feedback" aria-controls="panel-feedback" aria-selected="false" tabindex="-1"><span>04</span> Feedback loop</button>
+          <span class="tab-indicator" aria-hidden="true"></span>
+        </div>
+
+        <div class="dossier-panel" role="tabpanel" id="panel-course" aria-labelledby="tab-course" tabindex="0">
+          <div class="panel-intro">
+            <p class="panel-kicker">Proposed course · 14 weeks · upper-level undergraduate / graduate</p>
+            <h4>Autonomous Aerial Systems: Perception, Learning &amp; Trust</h4>
+            <p>This proposed course teaches modern AI through one evolving system: an autonomous VTOL that must see, decide, act, and justify its behavior. Each phase adds a layer to the same project, so students experience how design choices compound.</p>
+          </div>
+          <div class="flight-plan-wrap">
+            <span class="fp-drone" aria-hidden="true">
+              <svg viewBox="-12 -12 24 24"><path d="M-6-6 6 6M6-6-6 6" /><circle cx="-6" cy="-6" r="3.6" /><circle cx="6" cy="-6" r="3.6" /><circle cx="6" cy="6" r="3.6" /><circle cx="-6" cy="6" r="3.6" /><rect x="-2.5" y="-2.5" width="5" height="5" rx="1.5" /></svg>
+            </span>
+            <ol class="flight-plan">
+              <li><span class="fp-weeks">Weeks 1–4</span><strong>Perceive</strong><p>Sensors, image formation, and detection and tracking in aerial imagery.</p><em>Lab · Detect landing pads in drone footage</em></li>
+              <li><span class="fp-weeks">Weeks 5–8</span><strong>Decide</strong><p>Markov decision processes, value-based and policy-gradient RL, and reward design.</p><em>Lab · Train a hover-and-land policy in simulation</em></li>
+              <li><span class="fp-weeks">Weeks 9–11</span><strong>Act safely</strong><p>Control loops, VTOL transition, safety constraints, and the sim-to-real gap.</p><em>Lab · Stress-test a policy under wind and sensor noise</em></li>
+              <li><span class="fp-weeks">Weeks 12–14</span><strong>Trust</strong><p>Explainability, adversarial attacks on perception, and robustness evaluation.</p><em>Lab · Red-team a peer’s model, then write an explanation memo</em></li>
+            </ol>
+          </div>
+          <div class="panel-columns">
+            <div>
+              <h5>Course learning outcomes</h5>
+              <ol class="outcomes">
+                <li>Implement perception and decision modules for an autonomous UAV pipeline.</li>
+                <li>Design experiments that test robustness, not just average performance.</li>
+                <li>Explain a learned policy’s behavior using appropriate explainable-AI methods.</li>
+                <li>Critique the safety and ethical implications of deploying autonomous aircraft.</li>
+              </ol>
+            </div>
+            <div>
+              <h5>Assessment mix</h5>
+              <ul class="weights">
+                <li><span>Weekly labs</span><b>30%</b></li>
+                <li><span>Project milestones</span><b>35%</b></li>
+                <li><span>Explanation memo &amp; live demo</span><b>25%</b></li>
+                <li><span>Exit tickets &amp; reflections</span><b>10%</b></li>
+              </ul>
+              <p class="fine">Weighted toward process: three of the four components reward iteration and explanation, not only final output.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dossier-panel" role="tabpanel" id="panel-lesson" aria-labelledby="tab-lesson" tabindex="0">
+          <div class="panel-intro">
+            <p class="panel-kicker">Sample lesson · 75 minutes · week 3 of the course</p>
+            <h4>“Can the drone trust what it sees?”</h4>
+            <p>Students investigate how a vision model’s confidence changes under blur, glare, and altitude, then design a safe fallback behavior for when perception becomes unreliable.</p>
+          </div>
+          <div class="panel-columns lesson-columns">
+            <div>
+              <h5>Learning objectives</h5>
+              <p class="fine first">By the end of the session, students will be able to:</p>
+              <ol class="outcomes">
+                <li><b>Explain</b> why a detector’s confidence score is not the probability that it is correct.</li>
+                <li><b>Predict</b> how image conditions change detection performance, then test that prediction.</li>
+                <li><b>Justify</b> a fallback behavior for a UAV when perception confidence drops.</li>
+              </ol>
+              <h5 class="spaced">Inclusive design</h5>
+              <ul class="check-list compact">
+                <li>Starter notebook with a low-floor path and an extension task on calibration curves.</li>
+                <li>Pairs swap driver and navigator roles halfway through the lab.</li>
+                <li>Each concept appears as a diagram, as pseudocode, and as a live run.</li>
+              </ul>
+            </div>
+            <div>
+              <h5>Run of show</h5>
+              <ol class="run-sheet">
+                <li><span class="rs-time">00–08</span><div><strong>Warm-up poll</strong><p>“Would you land on this pad?” Students vote on three aerial images and justify their choice.</p></div><em>Activate</em></li>
+                <li><span class="rs-time">08–20</span><div><strong>Mini-lecture + live demo</strong><p>Detection confidence and calibration, run live on drone footage.</p></div><em>Model</em></li>
+                <li><span class="rs-time">20–42</span><div><strong>Predict → Test → Explain lab</strong><p>Pairs predict accuracy under blur, glare, and altitude, run the notebook, and compare.</p></div><em>Practice</em></li>
+                <li><span class="rs-time">42–57</span><div><strong>Failure-map debrief</strong><p>Pairs share their biggest surprise; the class maps where and why the model fails.</p></div><em>Discuss</em></li>
+                <li><span class="rs-time">57–68</span><div><strong>Design challenge</strong><p>Hover, climb, or hand off to the pilot? Teams choose a fallback and defend it with evidence.</p></div><em>Apply</em></li>
+                <li><span class="rs-time">68–75</span><div><strong>Exit ticket</strong><p>One concept check plus “What is still muddy?”, read before the next class.</p></div><em>Reflect</em></li>
+              </ol>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="align-table">
+              <caption>Alignment: every objective has an activity and visible evidence of learning</caption>
+              <thead><tr><th scope="col">Objective</th><th scope="col">Activity</th><th scope="col">Evidence of learning</th></tr></thead>
+              <tbody>
+                <tr><td>Explain confidence vs. correctness</td><td>Warm-up poll, mini-lecture</td><td>Exit-ticket concept check</td></tr>
+                <tr><td>Predict and test performance</td><td>Predict → Test → Explain lab</td><td>Prediction sheet compared with measured results</td></tr>
+                <tr><td>Justify a fallback behavior</td><td>Design challenge</td><td>Team decision note that cites evidence</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dossier-panel" role="tabpanel" id="panel-rubric" aria-labelledby="tab-rubric" tabindex="0">
+          <div class="panel-intro">
+            <p class="panel-kicker">Sample project · teams of 2–3 · weeks 6–14</p>
+            <h4>Teach a VTOL to land</h4>
+            <p>Teams train a reinforcement-learning landing policy in simulation, stress-test it under disturbances, and explain its behavior to a non-expert stakeholder. The rubric is shared on day one, and teams self-assess against it before each milestone.</p>
+          </div>
+          <ol class="milestones">
+            <li><b>M1</b><span>Week 6</span>Proposal &amp; hypothesis</li>
+            <li><b>M2</b><span>Week 8</span>Baseline policy</li>
+            <li><b>M3</b><span>Week 11</span>Robustness stress test</li>
+            <li><b>M4</b><span>Week 14</span>Explanation memo &amp; live demo</li>
+          </ol>
+          <div class="table-wrap">
+            <table class="rubric">
+              <caption>Analytic rubric (excerpt)</caption>
+              <thead><tr><th scope="col">Criterion</th><th scope="col">Developing</th><th scope="col">Proficient</th><th scope="col">Exemplary</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Implementation</th><td>Policy trains, but results are not reproducible.</td><td>Reproducible training with documented hyperparameters and seeds.</td><td>Modular code with ablations that isolate each design choice.</td></tr>
+                <tr><th scope="row">Experimental design</th><td>Reports a single average reward.</td><td>Compares against a baseline across multiple seeds.</td><td>Systematic stress tests (wind, noise, sensor dropout) with failure analysis.</td></tr>
+                <tr><th scope="row">Explanation</th><td>Describes what the policy does.</td><td>Explains why, using rollouts or explainable-AI evidence.</td><td>Tailors the explanation to a non-expert and states limitations honestly.</td></tr>
+                <tr><th scope="row">Reflection &amp; iteration</th><td>Lists problems encountered.</td><td>Links each revision to evidence.</td><td>Shows how failures reshaped the hypothesis and the next experiment.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dossier-panel" role="tabpanel" id="panel-feedback" aria-labelledby="tab-feedback" tabindex="0">
+          <div class="panel-intro">
+            <p class="panel-kicker">Formative assessment · continuous improvement</p>
+            <h4>Collect → analyze → adjust → report back</h4>
+            <p>I treat my own teaching like a system under test: gather evidence from students often, change what the evidence says is not working, and tell students what changed and why.</p>
+          </div>
+          <div class="panel-columns">
+            <div>
+              <ol class="loop">
+                <li><b>Collect</b><span>Exit tickets every session; an anonymous Start / Stop / Continue survey at mid-semester.</span></li>
+                <li><b>Analyze</b><span>Sort responses by misconception and by theme before the next class.</span></li>
+                <li><b>Adjust</b><span>Open the next session by re-teaching the top two confusions with a fresh example.</span></li>
+                <li><b>Report back</b><span>Share survey themes with the class: what will change, what won’t, and why.</span></li>
+              </ol>
+              <p class="loop-note">↺ The cycle repeats every week</p>
+            </div>
+            <figure class="exit-ticket">
+              <figcaption>Exit ticket · Week 3</figcaption>
+              <ol>
+                <li>A detector reports 0.92 confidence on a landing pad in heavy glare. Should the UAV land? What else would you check?</li>
+                <li>What is still muddy for you after today?</li>
+              </ol>
+              <span class="ticket-stamp">2 min · anonymous</span>
+            </figure>
+          </div>
+          <ul class="instruments">
+            <li><b>Peer observation</b>Invite a colleague to observe a session with one specific focus question.</li>
+            <li><b>Reflection journal</b>After each session, note what worked, what didn’t, and one change for next time.</li>
+            <li><b>Assessment audit</b>Before the term begins, check every graded task against the course outcomes.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="subhead reveal"><span>C</span>50-minute class plan</h3>
+      <div class="class-plan reveal">
+        <div class="panel-intro">
+          <p class="panel-kicker">Class session plan · 50 minutes · reinforcement learning unit</p>
+          <h4>Teaching a drone to land: MDPs and reward design</h4>
+          <p>This session follows a bookend–overlay–interleave structure. Retrieval practice opens the class, guided notes keep students writing through two short lecturettes, a think-pair-share breaks the lecture at its midpoint, and a lecture wrapper closes it by checking what students actually took away.</p>
+        </div>
+
+        <nav class="cp-timeline" aria-label="Class timeline">
+          <span class="cp-drone" aria-hidden="true">
+            <svg viewBox="-12 -12 24 24"><path d="M-6-6 6 6M6-6-6 6" /><circle cx="-6" cy="-6" r="3.6" /><circle cx="6" cy="-6" r="3.6" /><circle cx="6" cy="6" r="3.6" /><circle cx="-6" cy="6" r="3.6" /><rect x="-2.5" y="-2.5" width="5" height="5" rx="1.5" /></svg>
+          </span>
+          <div class="cp-track">
+            <a class="cp-block" href="#cp-seg-1" data-cursor="00–05 · Update your classmate">
+              <span class="cp-layer activity"><span class="cp-strategy">Bookend</span><span class="cp-name">Update your classmate</span><span class="cp-min">00–05</span></span>
+            </a>
+            <a class="cp-block overlay" href="#cp-seg-2" data-cursor="05–20 · Guided notes + lecturette 1">
+              <span class="cp-layer activity"><span class="cp-strategy">Overlay</span><span class="cp-name">Guided notes</span><span class="cp-min">05–20</span></span>
+              <span class="cp-layer lecture"><span class="cp-strategy">Lecturette 1</span><span class="cp-name">Landing as an MDP</span></span>
+            </a>
+            <a class="cp-block" href="#cp-seg-3" data-cursor="20–25 · Think-pair-share">
+              <span class="cp-layer activity"><span class="cp-strategy">Interleave</span><span class="cp-name">Think-pair-share</span><span class="cp-min">20–25</span></span>
+            </a>
+            <a class="cp-block overlay" href="#cp-seg-4" data-cursor="25–40 · Guided notes + lecturette 2">
+              <span class="cp-layer activity"><span class="cp-strategy">Overlay</span><span class="cp-name">Guided notes</span><span class="cp-min">25–40</span></span>
+              <span class="cp-layer lecture"><span class="cp-strategy">Lecturette 2</span><span class="cp-name">Reward design &amp; reward hacking</span></span>
+            </a>
+            <a class="cp-block" href="#cp-seg-5" data-cursor="40–45 · Lecture wrapper">
+              <span class="cp-layer activity"><span class="cp-strategy">Bookend</span><span class="cp-name">Lecture wrapper</span><span class="cp-min">40–45</span></span>
+            </a>
+            <a class="cp-block flex" href="#cp-seg-6" data-cursor="45–50 · Flex time">
+              <span class="cp-layer"><span class="cp-strategy">Flex</span><span class="cp-name">Buffer</span><span class="cp-min">45–50</span></span>
+            </a>
+          </div>
+          <div class="cp-scale" aria-hidden="true"><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>30</span><span>35</span><span>40</span><span>45</span><span>50 min</span></div>
+        </nav>
+        <ul class="cp-legend">
+          <li class="activity">Student activity</li>
+          <li class="lecture">Instructor lecturette</li>
+          <li class="flex">Flex time</li>
+        </ul>
+
+        <div class="panel-columns">
+          <div>
+            <h5 class="plan-label">Learning objectives</h5>
+            <p class="fine first">By the end of class, students will be able to:</p>
+            <ol class="outcomes">
+              <li><b>Formulate</b> a UAV landing task as an MDP by naming its states, actions, rewards, and discount factor.</li>
+              <li><b>Predict</b> how a sparse versus a shaped reward changes what a learning agent does.</li>
+              <li><b>Explain</b> how an agent can exploit a careless reward, and how shaping can prevent it.</li>
+            </ol>
+          </div>
+          <div>
+            <h5 class="plan-label">Materials</h5>
+            <ul class="check-list compact">
+              <li>Two-part guided-notes handout, also posted as a fillable PDF.</li>
+              <li>Slides with a 60-second simulation clip of a drone gaming its reward.</li>
+              <li>Index cards, or a two-question LMS form, for the lecture wrapper.</li>
+              <li>A countdown timer on the projector for each activity.</li>
+            </ul>
+          </div>
+        </div>
+
+        <ol class="cp-segments">
+          <li class="cp-seg" id="cp-seg-1">
+            <div class="cp-seg-head"><span class="cp-time">00–05</span><span class="cp-tag">Bookend</span></div>
+            <div>
+              <h5>Update your classmate</h5>
+              <p class="cp-purpose">Retrieve the previous class before adding anything new, and surface gaps early.</p>
+              <dl class="cp-roles">
+                <dt>Students</dt><dd>In pairs, Partner A has 90 seconds to explain last class’s big idea, tracking a landing pad across video frames. Partner B adds one detail A missed and writes down one open question.</dd>
+                <dt>Instructor</dt><dd>Circulates and listens for misconceptions, calls on two pairs for their questions, then bridges to today: “The drone can now see the pad. How should it decide what to do next?”</dd>
+              </dl>
+              <p class="cp-evidence"><b>Evidence</b>The questions pairs raise, and recurring gaps noted for the wrapper.</p>
+            </div>
+          </li>
+
+          <li class="cp-seg has-notes" id="cp-seg-2">
+            <div class="cp-seg-head"><span class="cp-time">05–20</span><span class="cp-tag">Overlay</span></div>
+            <div>
+              <h5>Guided notes over lecturette 1: landing as an MDP</h5>
+              <p class="cp-purpose">Give students a scaffold for the key structure while they listen, so their attention goes to ideas rather than transcription.</p>
+              <dl class="cp-roles">
+                <dt>Lecturette</dt><dd>The agent–environment loop and the MDP tuple (S, A, P, R, γ), applied to landing: altitude, velocity, pad offset, and battery as state; thrust commands as actions; wind making transitions stochastic.</dd>
+                <dt>Students</dt><dd>Fill in part 1 of the guided notes. The instructor pauses twice for 60 seconds so students can complete blanks and check them with a neighbor.</dd>
+              </dl>
+              <p class="cp-evidence"><b>Evidence</b>A quick scan of notes during each pause, and one blank answered aloud by a volunteer.</p>
+            </div>
+            <figure class="exit-ticket notes-sheet">
+              <figcaption>Guided notes · Part 1</figcaption>
+              <ol>
+                <li>An MDP is the tuple (S, A, P, R, <span class="blank" role="img" aria-label="blank"></span>).</li>
+                <li>Three useful state variables for the landing drone: <span class="blank" role="img" aria-label="blank"></span>, <span class="blank" role="img" aria-label="blank"></span>, <span class="blank" role="img" aria-label="blank"></span>.</li>
+                <li>Wind makes the transition function <span class="blank" role="img" aria-label="blank"></span> rather than deterministic.</li>
+                <li>A discount factor close to 1 means the agent values <span class="blank" role="img" aria-label="blank"></span> rewards.</li>
+              </ol>
+              <div class="sketch-box">Sketch the agent–environment loop and mark where the reward enters.</div>
+            </figure>
+          </li>
+
+          <li class="cp-seg" id="cp-seg-3">
+            <div class="cp-seg-head"><span class="cp-time">20–25</span><span class="cp-tag">Interleave</span></div>
+            <div>
+              <h5>Think-pair-share</h5>
+              <p class="cp-purpose">Apply the MDP framing to a concrete case, and set up the problem the second lecturette solves.</p>
+              <dl class="cp-roles">
+                <dt>Prompt</dt><dd>“The drone earns +100 for a safe landing and 0 for everything else. Predict what it does during its first 1,000 training episodes, and explain why.”</dd>
+                <dt>Students</dt><dd>Think alone and write a prediction (1 min), compare with a partner (2 min), then two or three randomly chosen pairs share (2 min).</dd>
+                <dt>Instructor</dt><dd>Tallies the predictions on the board (crashes, drifts randomly, learns to land) and leaves the tally up for lecturette 2.</dd>
+              </dl>
+              <p class="cp-evidence"><b>Evidence</b>Written predictions in the guided-notes margin, and the class tally.</p>
+            </div>
+          </li>
+
+          <li class="cp-seg has-notes" id="cp-seg-4">
+            <div class="cp-seg-head"><span class="cp-time">25–40</span><span class="cp-tag">Overlay</span></div>
+            <div>
+              <h5>Guided notes over lecturette 2: reward design and reward hacking</h5>
+              <p class="cp-purpose">Show why the sparse reward from the think-pair-share learns so slowly, and why a careless fix can be worse.</p>
+              <dl class="cp-roles">
+                <dt>Lecturette</dt><dd>Sparse versus shaped rewards; a 60-second clip of a drone, rewarded for being near the pad, that learns to hover just above it forever; the fix: potential-based shaping, which rewards progress without changing the optimal policy, plus a small time penalty.</dd>
+                <dt>Students</dt><dd>Fill in part 2 of the guided notes, then return to their think-pair-share prediction and mark whether it held up.</dd>
+              </dl>
+              <p class="cp-evidence"><b>Evidence</b>Corrected predictions, and a show-of-hands check after the clip: “Why doesn’t it land?”</p>
+            </div>
+            <figure class="exit-ticket notes-sheet">
+              <figcaption>Guided notes · Part 2</figcaption>
+              <ol>
+                <li>Sparse reward: the agent is rewarded only when <span class="blank" role="img" aria-label="blank"></span>.</li>
+                <li>Shaped reward: extra signal for <span class="blank" role="img" aria-label="blank"></span>.</li>
+                <li>In the clip, the drone <span class="blank" role="img" aria-label="blank"></span> instead of landing because <span class="blank" role="img" aria-label="blank"></span>.</li>
+                <li>Potential-based shaping rewards the change in <span class="blank" role="img" aria-label="blank"></span>, so the optimal policy stays the same.</li>
+                <li>Rule of thumb: reward the outcome you want, not <span class="blank" role="img" aria-label="blank"></span>.</li>
+              </ol>
+            </figure>
+          </li>
+
+          <li class="cp-seg" id="cp-seg-5">
+            <div class="cp-seg-head"><span class="cp-time">40–45</span><span class="cp-tag">Bookend</span></div>
+            <div>
+              <h5>Lecture wrapper</h5>
+              <p class="cp-purpose">Check whether what students took away matches what mattered, and build the habit of monitoring their own understanding.</p>
+              <dl class="cp-roles">
+                <dt>Students</dt><dd>On an index card, write the three most important ideas from today and one question that is still open (3 min). Then compare with the instructor’s list: circle the matches and star anything missed.</dd>
+                <dt>Instructor</dt><dd>Reveals a top three (2 min): a task becomes RL-ready once S, A, R, and γ are named; sparse rewards make learning slow, and shaping helps; an agent optimizes the reward you wrote, not the one you meant.</dd>
+              </dl>
+              <p class="cp-evidence"><b>Evidence</b>The collected cards show which ideas landed. Mismatches become the topic of the next class’s “Update your classmate”.</p>
+            </div>
+          </li>
+
+          <li class="cp-seg" id="cp-seg-6">
+            <div class="cp-seg-head"><span class="cp-time">45–50</span><span class="cp-tag flex">Flex</span></div>
+            <div>
+              <h5>Flex time</h5>
+              <p class="cp-purpose">The five activities total 45 minutes. The last five absorb transitions and overruns, so the closing wrapper is never cut.</p>
+              <dl class="cp-roles">
+                <dt>If time is short</dt><dd>Drop the second notes pause in lecturette 1, never the think-pair-share or the wrapper.</dd>
+                <dt>If time is left</dt><dd>Remind teams of the next project milestone and take individual questions.</dd>
+              </dl>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!--
+        TEACHING RECORD: add verified entries (courses, TA roles, guest lectures, workshops, student feedback),
+        then delete these comment markers. The styles for this block are already in styles.css.
+
+      <h3 class="subhead reveal"><span>D</span>Teaching record</h3>
+      <div class="record reveal">
+        <ol class="record-list">
+          <li>
+            <span class="record-term">Term Year</span>
+            <div>
+              <strong>Role, Course code: Course title</strong>
+              <p>Institution · number of students · responsibilities (labs, office hours, grading, guest lecture)</p>
+            </div>
+          </li>
+        </ol>
+        <blockquote class="record-quote">
+          <p>“An anonymized quote from student evaluations or feedback.”</p>
+          <cite>Student evaluation, Term Year</cite>
+        </blockquote>
+      </div>
+      -->
+    </section>
+
+    <section class="section contact" id="contact">
+      <div class="contact-panel reveal">
+        <span class="panel-tag" aria-hidden="true">COMMS · CHANNEL OPEN</span>
+        <div>
+          <p class="eyebrow light">06 / Contact</p>
+          <h2>Let’s talk about teaching, AI, and autonomous aerial systems.</h2>
+        </div>
+        <div class="contact-actions">
+          <a class="contact-link" href="mailto:syasar@crimson.ua.edu">
+            <span>Email</span>
+            <strong>syasar@crimson.ua.edu</strong>
+          </a>
+          <div class="contact-link static">
+            <span>Current role</span>
+            <strong>PhD Student • Computer Science</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> Samin Yasar. Teaching Portfolio.</p>
+    <span class="footer-status" aria-hidden="true"><i></i>All systems nominal</span>
+    <a href="#top">Back to top ↑</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
